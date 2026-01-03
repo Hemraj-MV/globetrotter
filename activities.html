@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>GlobeTrotter | Activities</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+  <!-- Background overlay -->
+  <div class="overlay"></div>
+
+  <div class="app-container">
+
+    <!-- Header -->
+    <header class="glass dashboard-header">
+      <h1>🎯 Select Activities</h1>
+      <p class="subtitle">Choose activities you’d like to include in your trip</p>
+    </header>
+
+    <!-- Activities Grid -->
+    <section>
+      <h2 class="section-title">Available Activities</h2>
+
+      <div class="card-grid">
+
+        <div class="trip-card glass">
+          <h3>🏖 Beach Relaxation</h3>
+          <p>Enjoy beaches and sunset views</p>
+          <label>
+            <input type="checkbox" value="Beach Relaxation">
+            Add Activity
+          </label>
+        </div>
+
+        <div class="trip-card glass">
+          <h3>🥾 Trekking</h3>
+          <p>Adventure trails and scenic hikes</p>
+          <label>
+            <input type="checkbox" value="Trekking">
+            Add Activity
+          </label>
+        </div>
+
+        <div class="trip-card glass">
+          <h3>🍴 Local Food Tour</h3>
+          <p>Explore local cuisine and street food</p>
+          <label>
+            <input type="checkbox" value="Food Tour">
+            Add Activity
+          </label>
+        </div>
+
+        <div class="trip-card glass">
+          <h3>🛕 Temple Visit</h3>
+          <p>Spiritual and cultural experience</p>
+          <label>
+            <input type="checkbox" value="Temple Visit">
+            Add Activity
+          </label>
+        </div>
+
+        <div class="trip-card glass">
+          <h3>🚤 Water Sports</h3>
+          <p>Jet ski, boating and water fun</p>
+          <label>
+            <input type="checkbox" value="Water Sports">
+            Add Activity
+          </label>
+        </div>
+
+        <div class="trip-card glass">
+          <h3>📸 Sightseeing</h3>
+          <p>Explore famous attractions</p>
+          <label>
+            <input type="checkbox" value="Sightseeing">
+            Add Activity
+          </label>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Actions -->
+    <section style="margin-top: 40px; text-align: center;">
+      <button class="primary-btn" onclick="saveActivities()">
+        Continue to Budget
+      </button>
+    </section>
+
+  </div>
+
+  <script src="assets/script.js"></script>
+</body>
+</html>

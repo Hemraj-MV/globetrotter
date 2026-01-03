@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>GlobeTrotter | Itinerary</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+  <!-- Background overlay -->
+  <div class="overlay"></div>
+
+  <div class="app-container">
+
+    <!-- Header -->
+    <header class="glass dashboard-header">
+      <h1>🗓️ Your Trip Itinerary</h1>
+      <p class="subtitle">Day-wise travel plan generated for you</p>
+    </header>
+
+    <!-- Itinerary Cards -->
+    <section>
+      <h2 class="section-title">Planned Days</h2>
+
+      <!-- JS will auto-fill this -->
+      <div id="itineraryContainer" class="card-grid">
+        <!-- Example Card (JS replaces these) -->
+        <!--
+        <div class="trip-card glass">
+          <h3>Day 1</h3>
+          <p>Beach visit & relaxation</p>
+        </div>
+        -->
+      </div>
+    </section>
+
+    <!-- Actions -->
+    <section style="margin-top: 40px; text-align: center;">
+      <button class="secondary-btn" onclick="goToActivities()">
+        Select Activities
+      </button>
+    </section>
+
+  </div>
+
+  <script src="assets/script.js"></script>
+</body>
+</html>

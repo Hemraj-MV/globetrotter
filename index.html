@@ -1,32 +1,49 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>GlobeTrotter - AI Trip Planner</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <title>GlobeTrotter | Login</title>
+  <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
 
-<h1>🌍 GlobeTrotter AI Trip Planner</h1>
+  <div class="overlay"></div>
 
-<form action="result.php" method="POST" onsubmit="return validateForm()">
-  <label>Budget (₹)</label>
-  <input type="number" id="budget" name="budget" required>
+  <div class="login-container">
+    <div class="login-card">
+      <h1>🌍 GlobeTrotter</h1>
+      <p class="tagline">Your smart travel companion</p>
 
-  <label>Number of Days</label>
-  <input type="number" id="days" name="days" required>
+      <form>
+        <div class="input-group">
+          <input type="email" placeholder="Email address" required>
+        </div>
 
-  <label>Travel Preference</label>
-  <select name="preference" id="preference" required>
-    <option value="">Select</option>
-    <option>Beach</option>
-    <option>Nature</option>
-    <option>Temple</option>
-    <option>Adventure</option>
-  </select>
+        <div class="input-group">
+          <input type="password" placeholder="Password" required>
+        </div>
+        
+        <div style="text-align: right; margin-bottom: 20px; font-size: 13px;">
+          <a href="#" onclick="alert('Reset link sent!')" style="color: #00c6ff; text-decoration: none;">Forgot Password?</a>
+        </div>
 
-  <button type="submit">Generate Trip</button>
-</form>
+        <button class="primary-btn" onclick="login()">
+          Login
+        </button>
 
-<script src="script.js"></script>
+        <div class="or-text">or</div>
+
+        <button type="button" class="secondary-btn" onclick="guestLogin()">
+          Continue as Guest
+        </button>
+      </form>
+
+      <p class="footer">
+        New user? <a href="signup.html">Create an account</a>
+      </p>
+    </div>
+  </div>
+
+  <script src="assets/script.js"></script>
 </body>
 </html>
