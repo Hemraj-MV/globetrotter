@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>GlobeTrotter - AI Trip Planner</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h1>🌍 GlobeTrotter AI Trip Planner</h1>
+
+<form action="result.php" method="POST" onsubmit="return validateForm()">
+  <label>Budget (₹)</label>
+  <input type="number" id="budget" name="budget" required>
+
+  <label>Number of Days</label>
+  <input type="number" id="days" name="days" required>
+
+  <label>Travel Preference</label>
+  <select name="preference" id="preference" required>
+    <option value="">Select</option>
+    <option>Beach</option>
+    <option>Nature</option>
+    <option>Temple</option>
+    <option>Adventure</option>
+  </select>
+
+  <button type="submit">Generate Trip</button>
+</form>
+
+<script src="script.js"></script>
+</body>
+</html>
