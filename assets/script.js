@@ -1,138 +1,159 @@
 /* =========================
-   AUTH
+   AUTH (Connected to PHP)
 ========================= */
 
-function login() {
+async function login(event) {
   event.preventDefault();
-  const email = document.querySelector('input[type="email"]').value;
-  const password = document.querySelector('input[type="password"]').value;
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
 
-  if (!email || !password) { alert("Please enter email and password"); return; }
-  localStorage.setItem("user", JSON.stringify({ email: email, name: "Traveler One" }));
-  window.location.href = "dashboard.html";
+  try {
+    const response = await fetch('api/login.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    
+    const data = await response.json();
+    
+    if(data.status === "success") {
+      // Store user info in localStorage for easy access to Name/ID in JS
+      localStorage.setItem("user", JSON.stringify(data.user)); 
+      window.location.href = "dashboard.php";
+    } else {
+      alert(data.message);
+    }
+  } catch (error) {
+    console.error("Error:", error);
+    alert("Login failed. Check console.");
+  }
 }
 
-function guestLogin() {
-  localStorage.setItem("user", JSON.stringify({ email: "guest@globetrotter.com", name: "Guest User" }));
-  window.location.href = "dashboard.html";
-}
-
-function signup(event) {
+async function signup(event) {
   event.preventDefault();
   const name = document.getElementById("newName").value;
-  localStorage.setItem("user", JSON.stringify({ name: name, email: "user@example.com" }));
-  alert("Account created! Redirecting...");
-  window.location.href = "dashboard.html";
+  const email = document.getElementById("newEmail").value;
+  const password = document.getElementById("newPassword").value;
+
+  try {
+    const response = await fetch('api/signup.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, password })
+    });
+
+    const data = await response.json();
+    
+    if(data.status === "success") {
+      alert("Account created! Please login.");
+      window.location.href = "index.php";
+    } else {
+      alert(data.message);
+    }
+  } catch (error) {
+    console.error("Error:", error);
+  }
 }
 
 function logout() {
   if(confirm("Are you sure you want to logout?")) {
     localStorage.removeItem("user");
-    window.location.href = "index.html";
-  }
-}
-
-function deleteAccount() {
-  if(confirm("⚠️ Are you sure you want to permanently delete your account?")) {
-    localStorage.clear();
-    window.location.href = "index.html";
+    window.location.href = "logout.php";
   }
 }
 
 /* =========================
-   DASHBOARD
+   DASHBOARD (Fetches from DB)
 ========================= */
 
-function goToPlanTrip() { window.location.href = "plan_trip.html"; }
+function goToPlanTrip() { window.location.href = "plan_trip.php"; }
 
 document.addEventListener("DOMContentLoaded", () => {
     const path = window.location.pathname;
     const user = JSON.parse(localStorage.getItem("user") || '{}');
 
-    if (path.includes("dashboard.html")) {
+    // 1. Dashboard Load
+    if (path.includes("dashboard.php")) {
         const subtitle = document.querySelector(".subtitle");
         if(subtitle && user.name) subtitle.innerText = `Welcome back, ${user.name}`;
-        loadDashboardTrips();
+        
+        loadDashboardTrips(user.id); // Fetch trips from DB
     }
 
+    // 2. Auto-runners
     if(document.getElementById("itineraryContainer")) loadItinerary();
     if(document.getElementById("travelCost")) loadBudget();
 });
 
-function loadDashboardTrips() {
-  const history = JSON.parse(localStorage.getItem("tripHistory")) || [];
+async function loadDashboardTrips(userId) {
   const container = document.getElementById("recentTripsGrid");
-  if (!container) return;
-  container.innerHTML = "";
+  if (!container || !userId) return;
+  
+  container.innerHTML = "<p style='grid-column:1/-1; text-align:center;'>Loading trips from database...</p>";
 
-  if (history.length === 0) {
-    container.innerHTML = `<p style="opacity:0.7; text-align:center; grid-column: 1/-1;">No trips planned yet.</p>`;
-    return;
+  try {
+    const response = await fetch(`api/get_trips.php?user_id=${userId}`);
+    const trips = await response.json();
+
+    container.innerHTML = "";
+
+    if (trips.length === 0) {
+      container.innerHTML = `<p style="opacity:0.7; text-align:center; grid-column: 1/-1;">No trips planned yet.</p>`;
+      return;
+    }
+
+    trips.forEach((trip, index) => {
+      const card = document.createElement("div");
+      card.className = "trip-card glass";
+      
+      // Parse stops if it comes as a string or array
+      let stopDisplay = "Multi-City Trip";
+      if(trip.stops && Array.isArray(trip.stops)) {
+          stopDisplay = trip.stops.join(", ");
+      }
+
+      const tripId = trip.name ? trip.name.replace(/\s/g, '-') : "trip-" + index;
+
+      card.innerHTML = `
+        <h3>${trip.name}</h3>
+        <p style="font-size:13px; opacity:0.8; margin-bottom:5px;">${trip.start_date} - ${trip.end_date}</p>
+        <p>${trip.days} Days • ${stopDisplay}</p>
+        <p style="margin-bottom: 15px;">Budget: ₹${trip.budget}</p>
+        <div style="display:flex; gap:10px;">
+          <button class="secondary-btn" style="flex:1;" onclick="alert('Viewing functionality coming soon!')">View</button>
+          <button class="secondary-btn" style="width:auto; padding:0 15px;" onclick="openShareModal('${trip.name}', '${tripId}')">📤</button>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+  } catch (error) {
+    console.error("Error loading trips:", error);
+    container.innerHTML = "<p>Error loading trips.</p>";
   }
-
-  history.reverse().forEach((trip, index) => {
-    const card = document.createElement("div");
-    card.className = "trip-card glass";
-    const tripId = trip.name ? trip.name.replace(/\s/g, '-') + "-" + index : "trip-" + index;
-    // Show first 2 cities as subtitle
-    const stopSummary = trip.stops && trip.stops.length ? trip.stops.join(", ") : trip.destination;
-
-    card.innerHTML = `
-      <h3>${trip.name}</h3>
-      <p style="font-size:13px; opacity:0.8; margin-bottom:5px;">${trip.startDate} - ${trip.endDate}</p>
-      <p>${trip.days} Days • ${stopSummary}</p>
-      <p style="margin-bottom: 15px;">Total: ₹${trip.totalCost || trip.budget}</p>
-      <div style="display:flex; gap:10px;">
-        <button class="secondary-btn" style="flex:1;" onclick="openItinerary()">View</button>
-        <button class="secondary-btn" style="width:auto; padding:0 15px;" onclick="openShareModal('${trip.name}', '${tripId}')">📤</button>
-      </div>
-    `;
-    container.appendChild(card);
-  });
-}
-
-function openShareModal(name, id) {
-  document.getElementById("shareModal").style.display = "flex";
-  document.getElementById("shareLinkInput").value = `https://globetrotter.app/share/${id}`;
-}
-function closeShareModal() { document.getElementById("shareModal").style.display = "none"; }
-function copyShareLink() {
-  const input = document.getElementById("shareLinkInput");
-  input.select();
-  navigator.clipboard.writeText(input.value);
-  alert("Link copied!");
-  closeShareModal();
 }
 
 /* =========================
    PLAN TRIP (MANUAL BUILDER)
 ========================= */
 
-// Store stops temporarily
 let currentStops = [];
 
 function addStop() {
   const input = document.getElementById("cityInput");
   const city = input.value.trim();
-  
   if (!city) return;
-  
   currentStops.push(city);
   renderStops();
-  input.value = ""; // Clear input
+  input.value = ""; 
 }
 
 function renderStops() {
   const list = document.getElementById("stopsList");
-  list.innerHTML = ""; // Clear current list
-  
+  list.innerHTML = ""; 
   currentStops.forEach((city, index) => {
     const item = document.createElement("div");
     item.style.cssText = "background: rgba(255,255,255,0.1); padding: 10px; margin-bottom: 5px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;";
-    item.innerHTML = `
-      <span>📍 ${city}</span>
-      <button onclick="removeStop(${index})" style="background: none; border: none; color: #ff6b6b; cursor: pointer;">✕</button>
-    `;
+    item.innerHTML = `<span>📍 ${city}</span><button onclick="removeStop(${index})" style="background:none; border:none; color:#ff6b6b; cursor:pointer;">✕</button>`;
     list.appendChild(item);
   });
 }
@@ -143,9 +164,9 @@ function removeStop(index) {
 }
 
 function generateTrip() {
+  // Collect data
   const tripName = document.getElementById("tripName")?.value;
   const tripDesc = document.getElementById("tripDesc")?.value;
-  const tripImage = document.getElementById("tripImage")?.value;
   const startDate = document.getElementById("startDate")?.value;
   const endDate = document.getElementById("endDate")?.value;
   const budget = document.getElementById("budget")?.value;
@@ -154,12 +175,12 @@ function generateTrip() {
     alert("Please fill in Name, Dates, and Budget.");
     return;
   }
-  
   if (currentStops.length === 0) {
     alert("Please add at least one city stop!");
     return;
   }
 
+  // Calculate Days
   const start = new Date(startDate);
   const end = new Date(endDate);
   const diffTime = Math.abs(end - start);
@@ -167,11 +188,12 @@ function generateTrip() {
 
   if (days < 1) { alert("Invalid dates"); return; }
 
+  // Store in LocalStorage temporarily (for Itinerary/Budget calculation screens)
+  // We only SAVE to Database at the very end (Budget Screen)
   const trip = {
     name: tripName,
     description: tripDesc,
-    coverPhoto: tripImage,
-    stops: currentStops, // Replaces single destination
+    stops: currentStops,
     startDate: startDate,
     endDate: endDate,
     days: days,
@@ -179,11 +201,11 @@ function generateTrip() {
   };
 
   localStorage.setItem("trip", JSON.stringify(trip));
-  window.location.href = "itinerary.html";
+  window.location.href = "itinerary.php";
 }
 
 /* =========================
-   ITINERARY (MULTI-CITY LOGIC)
+   ITINERARY
 ========================= */
 
 function loadItinerary() {
@@ -194,48 +216,39 @@ function loadItinerary() {
   if (!container) return;
 
   document.querySelector("header h1").innerText = `🗓️ ${trip.name}`;
-  document.querySelector("header p").innerText = trip.description || `Multi-city trip: ${trip.stops.join(" ➝ ")}`;
+  document.querySelector("header p").innerText = trip.description || `Trip to ${trip.stops.join(", ")}`;
 
   container.innerHTML = "";
   let currentDate = new Date(trip.startDate);
-  
-  // Distribute days among stops
   const stopsCount = trip.stops.length;
   const daysPerStop = Math.max(1, Math.floor(trip.days / stopsCount));
   
   let dayCounter = 1;
   
   trip.stops.forEach((city, index) => {
-    // Determine how many days for this city
-    // If it's the last city, give it all remaining days to avoid gaps
     let stayDuration = (index === stopsCount - 1) ? (trip.days - dayCounter + 1) : daysPerStop;
 
     for(let d = 0; d < stayDuration; d++) {
         if(dayCounter > trip.days) break;
-
         const dateStr = currentDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
         
         const card = document.createElement("div");
         card.className = "trip-card glass";
-        // Header: Day X in City Name
         card.innerHTML = `
           <div style="display:flex; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:10px; margin-bottom:10px;">
             <h3 style="margin:0;">Day ${dayCounter}: ${city}</h3>
             <span style="font-size:12px; opacity:0.8">${dateStr}</span>
           </div>
           <p>Explore ${city} - City Tour & Local Attractions</p>
-          <p style="font-size:13px; opacity:0.6; margin-top:5px;">Estimated Daily Spend: ₹${Math.floor(trip.budget / trip.days)}</p>
         `;
         container.appendChild(card);
-        
         currentDate.setDate(currentDate.getDate() + 1);
         dayCounter++;
     }
   });
 }
 
-function openItinerary() { window.location.href = "itinerary.html"; }
-function goToActivities() { window.location.href = "activities.html"; }
+function goToActivities() { window.location.href = "activities.php"; }
 
 /* =========================
    ACTIVITIES & BUDGET
@@ -245,7 +258,7 @@ function saveActivities() {
   const selected = [];
   document.querySelectorAll("input[type='checkbox']:checked").forEach(cb => selected.push(cb.value));
   localStorage.setItem("activities", JSON.stringify(selected));
-  window.location.href = "budget.html";
+  window.location.href = "budget.php";
 }
 
 function loadBudget() {
@@ -262,9 +275,9 @@ function loadBudget() {
   document.getElementById("travelCost").innerText = "₹" + travelCost;
   document.getElementById("stayCost").innerText = "₹" + stayCost;
   document.getElementById("activityCost").innerText = "₹" + activityCost;
-  
   if(document.getElementById("chartTotal")) document.getElementById("chartTotal").innerText = "₹" + total;
 
+  // Render Chart
   const chart = document.getElementById("budgetChart");
   if (chart) {
     const pTravel = (travelCost / total) * 100;
@@ -272,6 +285,7 @@ function loadBudget() {
     chart.style.background = `conic-gradient(#00c6ff 0% ${pTravel}%, #bd34fe ${pTravel}% ${pStay}%, #ff9966 ${pStay}% 100%)`;
   }
 
+  // Render Activities
   const listContainer = document.getElementById("selectedActivitiesList");
   if(listContainer) {
     listContainer.innerHTML = "";
@@ -283,22 +297,147 @@ function loadBudget() {
   localStorage.setItem("trip", JSON.stringify(trip));
 }
 
-function confirmTrip() {
+/* =========================
+   FINAL SAVE TO DB
+========================= */
+
+async function confirmTrip() {
   const trip = JSON.parse(localStorage.getItem("trip"));
-  if(!trip) return;
-  const history = JSON.parse(localStorage.getItem("tripHistory")) || [];
-  history.push(trip);
-  localStorage.setItem("tripHistory", JSON.stringify(history));
-  localStorage.removeItem("trip"); 
-  localStorage.removeItem("activities");
-  alert("🎉 Trip Saved to Dashboard!");
-  window.location.href = "dashboard.html";
+  const user = JSON.parse(localStorage.getItem("user"));
+  
+  if(!trip || !user) {
+    alert("Session error. Please login again.");
+    return;
+  }
+
+  const payload = {
+    userId: user.id,
+    name: trip.name,
+    description: trip.description,
+    startDate: trip.startDate,
+    endDate: trip.endDate,
+    days: trip.days,
+    budget: trip.budget,
+    stops: trip.stops
+  };
+
+  try {
+    const response = await fetch('api/save_trip.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    
+    const data = await response.json();
+
+    if(data.status === "success") {
+      alert("🎉 Trip Saved to Database!");
+      localStorage.removeItem("trip");
+      localStorage.removeItem("activities");
+      window.location.href = "dashboard.php";
+    } else {
+      alert("Error saving trip: " + data.message);
+    }
+  } catch (error) {
+    console.error("Save Error:", error);
+    alert("Failed to save trip.");
+  }
 }
 
-function saveProfile() {
-    const name = document.getElementById("profileName").value;
-    const user = JSON.parse(localStorage.getItem("user") || '{}');
-    user.name = name;
-    localStorage.setItem("user", JSON.stringify(user));
-    alert("Profile Updated!");
+/* =========================
+   SHARE MODAL
+========================= */
+function openShareModal(name, id) {
+  document.getElementById("shareModal").style.display = "flex";
+  document.getElementById("shareLinkInput").value = `https://globetrotter.app/share/${id}`;
+}
+function closeShareModal() { document.getElementById("shareModal").style.display = "none"; }
+function copyShareLink() {
+  const input = document.getElementById("shareLinkInput");
+  input.select();
+  navigator.clipboard.writeText(input.value);
+  alert("Link copied!");
+  closeShareModal();
+}
+/* =========================
+   FEATURE 10: BOOKING DEMO
+========================= */
+
+function searchFlights() {
+  const from = document.getElementById("flightFrom").value;
+  const to = document.getElementById("flightTo").value;
+  
+  if(!from || !to) { alert("Please enter origin and destination"); return; }
+
+  const resultsGrid = document.getElementById("resultsGrid");
+  const section = document.getElementById("resultsSection");
+  
+  // 1. Show Loading State
+  section.style.display = "block";
+  resultsGrid.innerHTML = "<p style='text-align:center;'>🔍 Searching airlines...</p>";
+
+  // 2. Simulate API Delay (1.5 seconds)
+  setTimeout(() => {
+    resultsGrid.innerHTML = ""; // Clear loader
+    
+    // Fake Data
+    const flights = [
+      { airline: "SkyHigh Airways", time: "10:00 AM - 1:00 PM", price: 4500 },
+      { airline: "Oceanic Air", time: "2:30 PM - 5:45 PM", price: 5200 },
+      { airline: "Budget Fly", time: "6:00 AM - 9:00 AM", price: 3800 }
+    ];
+
+    flights.forEach(f => {
+      const card = document.createElement("div");
+      card.className = "result-card";
+      card.innerHTML = `
+        <div>
+          <h3>${f.airline}</h3>
+          <p style="font-size:13px; opacity:0.8">${from} ➝ ${to} • ${f.time}</p>
+        </div>
+        <div style="text-align:right;">
+          <div class="price-tag">₹${f.price}</div>
+          <button class="primary-btn" style="padding: 5px 15px; font-size:12px; margin-top:5px;" onclick="alert('Redirecting to payment gateway... (Demo)')">Book</button>
+        </div>
+      `;
+      resultsGrid.appendChild(card);
+    });
+  }, 1500);
+}
+
+function searchHotels() {
+  const loc = document.getElementById("hotelLoc").value;
+  if(!loc) { alert("Please enter a destination"); return; }
+
+  const resultsGrid = document.getElementById("resultsGrid");
+  const section = document.getElementById("resultsSection");
+
+  section.style.display = "block";
+  resultsGrid.innerHTML = "<p style='text-align:center;'>🏨 Finding best stays...</p>";
+
+  setTimeout(() => {
+    resultsGrid.innerHTML = "";
+    
+    const hotels = [
+      { name: "Grand Plaza Hotel", rating: "⭐⭐⭐⭐⭐", price: 8500 },
+      { name: "City Center Inn", rating: "⭐⭐⭐", price: 3200 },
+      { name: "Backpackers Hostel", rating: "⭐⭐", price: 900 }
+    ];
+
+    hotels.forEach(h => {
+      const card = document.createElement("div");
+      card.className = "result-card";
+      card.innerHTML = `
+        <div>
+          <h3>${h.name}</h3>
+          <p style="font-size:13px; opacity:0.8">${loc} • ${h.rating}</p>
+        </div>
+        <div style="text-align:right;">
+          <div class="price-tag">₹${h.price}<span style="font-size:12px; color:white; font-weight:normal">/night</span></div>
+          <button class="primary-btn" style="padding: 5px 15px; font-size:12px; margin-top:5px;" onclick="alert('Room Reserved! (Demo)')">Reserve</button>
+        </div>
+      `;
+      resultsGrid.appendChild(card);
+    });
+  }, 1500);
 }

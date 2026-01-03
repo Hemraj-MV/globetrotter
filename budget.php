@@ -1,0 +1,97 @@
+<?php
+session_start();
+// Security Check: Redirect to login if user is not authenticated
+if (!isset($_SESSION['user_id'])) {
+    header("Location: index.php");
+    exit();
+}
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>GlobeTrotter | Budget</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+  <div class="overlay"></div>
+
+  <div class="app-container">
+
+    <header class="glass dashboard-header">
+      <h1>💰 Trip Budget</h1>
+      <p class="subtitle">Estimated cost breakdown for your trip</p>
+    </header>
+
+    <section>
+      <h2 class="section-title">Cost Analysis</h2>
+
+      <div class="glass" style="padding: 30px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-around; gap: 30px;">
+        
+        <div style="text-align: center;">
+          <div class="pie-chart" id="budgetChart">
+            <div class="chart-center">
+              <span id="chartTotal">₹0</span>
+              <small>Total</small>
+            </div>
+          </div>
+        </div>
+
+        <div style="flex: 1; min-width: 250px;">
+          
+          <div class="budget-item">
+            <div class="color-dot" style="background: #00c6ff;"></div>
+            <div style="flex: 1;">
+              <h3>Travel</h3>
+              <small>Flights & Commute</small>
+            </div>
+            <p id="travelCost">₹0</p>
+          </div>
+
+          <div class="budget-item">
+            <div class="color-dot" style="background: #bd34fe;"></div>
+            <div style="flex: 1;">
+              <h3>Stay</h3>
+              <small>Hotels & AirBnB</small>
+            </div>
+            <p id="stayCost">₹0</p>
+          </div>
+
+          <div class="budget-item">
+            <div class="color-dot" style="background: #ff9966;"></div>
+            <div style="flex: 1;">
+              <h3>Activities</h3>
+              <small>Entry fees & Fun</small>
+            </div>
+            <p id="activityCost">₹0</p>
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="glass" style="margin-top: 20px; padding: 20px;">
+        <h3>📌 Selected Activities</h3>
+        <ul id="selectedActivitiesList" style="margin-top: 10px; padding-left: 20px; opacity: 0.9;">
+          </ul>
+      </div>
+
+    </section>
+
+    <section style="margin-top: 40px; text-align: center;">
+      <button class="primary-btn" onclick="confirmTrip()">
+        Confirm Trip
+      </button>
+      <div style="margin-top:15px;">
+        <button class="secondary-btn" style="width:auto; border:none;" onclick="window.location.href='activities.php'">
+          ← Change Activities
+        </button>
+      </div>
+    </section>
+
+  </div>
+
+  <script src="assets/script.js"></script>
+</body>
+</html>

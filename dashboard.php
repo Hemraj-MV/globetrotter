@@ -1,0 +1,76 @@
+<?php
+session_start();
+// Security: Redirect to login if user is not authenticated
+if (!isset($_SESSION['user_id'])) {
+    header("Location: index.php");
+    exit();
+}
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>GlobeTrotter | Dashboard</title>
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+
+  <div class="overlay"></div>
+
+  <div class="app-container">
+
+    <header class="dashboard-header glass">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div>
+          <h1>🌍 GlobeTrotter</h1>
+          <p class="subtitle">Welcome back, Traveler</p>
+        </div>
+        
+        <div style="display: flex; gap: 10px;">
+          <button class="secondary-btn" style="width: auto; padding: 8px 15px; font-size: 14px;" onclick="window.location.href='profile.php'">
+            ⚙️ Settings
+          </button>
+          <button class="secondary-btn" style="width: auto; padding: 8px 15px; font-size: 14px; background: rgba(255,0,0,0.2); border-color: rgba(255,0,0,0.3);" onclick="logout()">
+            Logout
+          </button>
+        </div>
+      </div>
+
+      <div style="margin-top: 20px; display: flex; gap: 15px;">
+        <button class="primary-btn" onclick="goToPlanTrip()">
+          + Create New Trip
+        </button>
+
+        <button class="secondary-btn" style="width: auto;" onclick="window.location.href='bookings.php'">
+          ✈️ Book Flights & Hotels
+          </button>
+      </div>
+    </header>
+
+    <main class="dashboard-content">
+      <h2 class="section-title">Recent Trips</h2>
+      
+      <div id="recentTripsGrid" class="card-grid"></div>
+    </main>
+
+  </div>
+
+  <div id="shareModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content glass">
+      <h2>📤 Share Itinerary</h2>
+      <p>Share this link with friends to let them see your plan.</p>
+      
+      <div class="input-group" style="margin: 20px 0;">
+        <input type="text" id="shareLinkInput" readonly style="color: #333; background: #fff;">
+      </div>
+
+      <div style="display: flex; gap: 10px;">
+        <button class="primary-btn" onclick="copyShareLink()">Copy Link</button>
+        <button class="secondary-btn" onclick="closeShareModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/script.js"></script>
+</body>
+</html>
